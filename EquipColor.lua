@@ -249,6 +249,25 @@ local function CheckItemTooltip(bag, slot, itemtype)
                 return false
             end
         end
+    elseif (itemtype == "ClassArmor") then
+        for ClassArmor = 7, 12 do
+            local EquipColor_Tooltip = getglobal('EquipColor_ScanTooltipTextLeft'..ClassArmor):GetText()
+            if EquipColor_Tooltip then
+                --EquipColor_BMsg("CheckItemTooltip: Armor_Tooltip ["..EquipColor_Tooltip.."]")
+                local _, _, Classes, ClassReq = string.find(EquipColor_Tooltip, "(Classes)%: (.+)")
+                if Classes then
+                    if ClassReq then
+                        if ClassReq == UnitClass("player") then
+                            --EquipColor_BMsg("CheckItemTooltip(True): ClassReq ["..ClassReq.."]")
+                            return true
+                        else
+                            --EquipColor_BMsg("CheckItemTooltip(False): ClassReq ["..ClassReq.."]")
+                            return false
+                        end
+                    end
+                end
+            end
+        end
     elseif (itemtype == "Learned") then
         local EquipColor_Tooltip = getglobal('EquipColor_ScanTooltipTextLeft3'):GetText()
         if EquipColor_Tooltip then
@@ -395,7 +414,12 @@ function EquipColor:AddOnCore_SetItemColors(object, slot)
                 table.insert(self.slotsToColour, slot:GetName())
                 --EquipColor_BMsg("SetItemColors(AllItems-LevelCheck): Name ["..itemname.."] ID ["..itemid.."] SubClass ["..itemsubclass.."]")
             elseif ((itemclass == "Weapon" or itemclass == "Armor") and itemsubclass ~= "Miscellaneous") then
-                if (CheckCharacterSkills(itemsubclass) == false) then
+                if (itemclass == "Armor") then
+                    if CheckItemTooltip(bag:GetID(), slot:GetID(), "ClassArmor") == false then
+                        table.insert(self.slotsToColour, slot:GetName())
+                        --EquipColor_BMsg("SetItemColors(ClassArmor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
+                    end
+                elseif (CheckCharacterSkills(itemsubclass) == false) then
                     table.insert(self.slotsToColour, slot:GetName())
                     --EquipColor_BMsg("SetItemColors(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                 elseif (CheckCharacterSpells("Dual Wield") == false) then
@@ -453,13 +477,17 @@ function EquipColor:ColourItems(bag, slot, itemFrame, frame)
     if (itemid ~= -1 and name ~= "Unknown") then
         local itemname, _, _, itemminlevel, itemclass, itemsubclass, _, itemEquipLoc = GetItemInfo(itemid)
         if (itemFrame ~= nil and itemFrame:IsVisible() and itemclass ~= nil and itemsubclass ~= nil) then
-
             --if frame ~= nil then EquipColor_BMsg("ColourItems(Items): ItemName ["..itemname.."] ItemID ["..itemid.."]") end
             if (itemminlevel > UnitLevel("player")) then
                 SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
                 if frame ~= nil then EquipColor_BMsg("ColourItems(AllItems-LevelCheck): Name ["..itemname.."] ID ["..itemid.."] SubClass ["..itemsubclass.."]") end
             elseif ((itemclass == "Weapon" or itemclass == "Armor") and itemsubclass ~= "Miscellaneous") then
-                if (CheckCharacterSkills(itemsubclass) == false) then
+                if (itemclass == "Armor") then
+                    if CheckItemTooltip(bag, slot, "ClassArmor") == false then
+                        SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
+                        if frame ~= nil then EquipColor_BMsg("SetItemColors(ClassArmor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
+                    end
+                elseif (CheckCharacterSkills(itemsubclass) == false) then
                     SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
                     if frame ~= nil then EquipColor_BMsg("ColourItems(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                 elseif (CheckCharacterSpells("Dual Wield") == false) then
