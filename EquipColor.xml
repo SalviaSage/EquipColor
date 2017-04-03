@@ -1,0 +1,27 @@
+<!-- EquipColor: Version: 0.1 -->
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
+
+<Frame name="EquipColor" parent="UIParent" hidden="false">
+	<Scripts>
+		<OnLoad>
+			EquipColor_OnLoad()
+			this:RegisterEvent("ADDON_LOADED")
+      this.TimeSinceLastUpdate = 0
+		</OnLoad>
+		<OnEvent>
+			EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+		</OnEvent>
+    <OnUpdate>
+      EquipColor_OnUpdate(arg1)
+    </OnUpdate>
+	</Scripts>
+</Frame>
+<GameTooltip name="EquipColor_ScanTooltip" inherits="GameTooltipTemplate">
+  <Scripts>
+    <Onload>
+      this:SetOwner(WorldFrame, "ANCHOR_NONE");
+    </Onload>
+  </Scripts>
+</GameTooltip>
+</Ui>
