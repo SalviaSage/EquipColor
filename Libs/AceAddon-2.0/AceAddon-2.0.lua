@@ -1,6 +1,6 @@
 --[[
 Name: AceAddon-2.0
-Revision: $Rev: 14832 $
+Revision: $Rev: 17957 $
 Developed by: The Ace Development Team (http://www.wowace.com/index.php/The_Ace_Development_Team)
 Inspired By: Ace 1.x by Turan (turan@gryphon.com)
 Website: http://www.wowace.com/
@@ -11,16 +11,22 @@ Dependencies: AceLibrary, AceOO-2.0, AceEvent-2.0, (optional) AceConsole-2.0
 ]]
 
 local MAJOR_VERSION = "AceAddon-2.0"
-local MINOR_VERSION = "$Revision: 14832 $"
+local MINOR_VERSION = "$Revision: 17957 $"
 
 -- This ensures the code is only executed if the libary doesn't already exist, or is a newer version
 if not AceLibrary then error(MAJOR_VERSION .. " requires AceLibrary.") end
 if not AceLibrary:IsNewVersion(MAJOR_VERSION, MINOR_VERSION) then return end
 
+if loadstring("return function(...) return ... end") and AceLibrary:HasInstance(MAJOR_VERSION) then return end -- lua51 check
 if not AceLibrary:HasInstance("AceOO-2.0") then error(MAJOR_VERSION .. " requires AceOO-2.0.") end
 
+local function safecall(func,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10)
+	local success, err = pcall(func,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10)
+	if not success then geterrorhandler()(err) end
+end
+
 -- Localization
-local STANDBY, TITLE, NOTES, VERSION, AUTHOR, DATE, CATEGORY, EMAIL, WEBSITE, CATEGORIES, ABOUT, PRINT_ADDON_INFO
+local STANDBY, TITLE, NOTES, VERSION, AUTHOR, DATE, CATEGORY, EMAIL, CREDITS, WEBSITE, CATEGORIES, ABOUT, PRINT_ADDON_INFO
 if GetLocale() == "deDE" then
 	STANDBY = "|cffff5050(Standby)|r" -- capitalized
 
@@ -32,6 +38,7 @@ if GetLocale() == "deDE" then
 	CATEGORY = "Kategorie"
 	EMAIL = "E-mail"
 	WEBSITE = "Webseite"
+	CREDITS = "Credits" -- fix
 		 
 	ABOUT = "\195\188ber"
 	PRINT_ADDON_INFO = "Gibt Addondaten aus"
@@ -44,7 +51,7 @@ if GetLocale() == "deDE" then
 		["Buffs"] = "Buffs",
 		["Chat/Communication"] = "Chat/Kommunikation",
 		["Druid"] = "Druide",
-		["Hunter"] = "J�ger",
+		["Hunter"] = "Jäger",
 		["Mage"] = "Magier",
 		["Paladin"] = "Paladin",
 		["Priest"] = "Priester",
@@ -83,6 +90,7 @@ elseif GetLocale() == "frFR" then
 	CATEGORY = "Cat\195\169gorie"
 	EMAIL = "E-mail"
 	WEBSITE = "Site web"
+	CREDITS = "Credits" -- fix
 	
 	ABOUT = "A propos"
 	PRINT_ADDON_INFO = "Afficher les informations sur l'addon"
@@ -124,106 +132,108 @@ elseif GetLocale() == "frFR" then
 		["UnitFrame"] = "Fen\195\170tres d'unit\195\169",
 	}
 elseif GetLocale() == "koKR" then
-	STANDBY = "|cffff5050(사용가능)|r"
+	STANDBY = "|cffff5050(ì‚¬ìš©ê°€ëŠ¥)|r"
 	
-	TITLE = "제목"
-	NOTES = "노트"
-	VERSION = "버전"
-	AUTHOR = "저작자"
-	DATE = "날짜"
-	CATEGORY = "분류"
+	TITLE = "ì œëª©"
+	NOTES = "ë…¸íŠ¸"
+	VERSION = "ë²„ì „"
+	AUTHOR = "ì €ìž‘ìž"
+	DATE = "ë‚ ì§œ"
+	CATEGORY = "ë¶„ë¥˜"
 	EMAIL = "E-mail"
-	WEBSITE = "웹사이트"
+	WEBSITE = "ì›¹ì‚¬ì´íŠ¸"
+	CREDITS = "Credits" -- fix
 	
-	ABOUT = "정보"
-	PRINT_ADDON_INFO = "애드온 정보 출력"
+	ABOUT = "ì •ë³´"
+	PRINT_ADDON_INFO = "ì• ë“œì˜¨ ì •ë³´ ì¶œë ¥"
 	
 	CATEGORIES = {
-		["Action Bars"] = "액션바",
-		["Auction"] = "경매",
-		["Audio"] = "음향",
-		["Battlegrounds/PvP"] = "전장/PvP",
-		["Buffs"] = "버프",
-		["Chat/Communication"] = "대화/의사소통",
-		["Druid"] = "드루이드",
-		["Hunter"] = "사냥꾼",
-		["Mage"] = "마법사",
-		["Paladin"] = "성기사",
-		["Priest"] = "사제",
-		["Rogue"] = "도적",
-		["Shaman"] = "주술사",
-		["Warlock"] = "흑마법사",
-		["Warrior"] = "전사",
-		["Healer"] = "힐러",
-		["Tank"] = "탱커",
-		["Caster"] = "캐스터",
-		["Combat"] = "전투",
-		["Compilations"] = "복합",
-		["Data Export"] = "자료 출력",
-		["Development Tools"] = "개발 도구",
-		["Guild"] = "길드",
-		["Frame Modification"] = "구조 변경",
-		["Interface Enhancements"] = "인터페이스 강화",
-		["Inventory"] = "인벤토리",
-		["Library"] = "라이브러리",
-		["Map"] = "지도",
-		["Mail"] = "우편",
-		["Miscellaneous"] = "기타",
-		["Quest"] = "퀘스트",
-		["Raid"] = "공격대",
-		["Tradeskill"] = "전문기술",
-		["UnitFrame"] = "유닛 프레임",
+		["Action Bars"] = "ì•¡ì…˜ë°”",
+		["Auction"] = "ê²½ë§¤",
+		["Audio"] = "ìŒí–¥",
+		["Battlegrounds/PvP"] = "ì „ìž¥/PvP",
+		["Buffs"] = "ë²„í”„",
+		["Chat/Communication"] = "ëŒ€í™”/ì˜ì‚¬ì†Œí†µ",
+		["Druid"] = "ë“œë£¨ì´ë“œ",
+		["Hunter"] = "ì‚¬ëƒ¥ê¾¼",
+		["Mage"] = "ë§ˆë²•ì‚¬",
+		["Paladin"] = "ì„±ê¸°ì‚¬",
+		["Priest"] = "ì‚¬ì œ",
+		["Rogue"] = "ë„ì ",
+		["Shaman"] = "ì£¼ìˆ ì‚¬",
+		["Warlock"] = "í‘ë§ˆë²•ì‚¬",
+		["Warrior"] = "ì „ì‚¬",
+		["Healer"] = "ížëŸ¬",
+		["Tank"] = "íƒ±ì»¤",
+		["Caster"] = "ìºìŠ¤í„°",
+		["Combat"] = "ì „íˆ¬",
+		["Compilations"] = "ë³µí•©",
+		["Data Export"] = "ìžë£Œ ì¶œë ¥",
+		["Development Tools"] = "ê°œë°œ ë„êµ¬",
+		["Guild"] = "ê¸¸ë“œ",
+		["Frame Modification"] = "êµ¬ì¡° ë³€ê²½",
+		["Interface Enhancements"] = "ì¸í„°íŽ˜ì´ìŠ¤ ê°•í™”",
+		["Inventory"] = "ì¸ë²¤í† ë¦¬",
+		["Library"] = "ë¼ì´ë¸ŒëŸ¬ë¦¬",
+		["Map"] = "ì§€ë„",
+		["Mail"] = "ìš°íŽ¸",
+		["Miscellaneous"] = "ê¸°íƒ€",
+		["Quest"] = "í€˜ìŠ¤íŠ¸",
+		["Raid"] = "ê³µê²©ëŒ€",
+		["Tradeskill"] = "ì „ë¬¸ê¸°ìˆ ",
+		["UnitFrame"] = "ìœ ë‹› í”„ë ˆìž„",
 	}
 elseif GetLocale() == "zhTW" then
-	STANDBY = "|cffff5050(待命)|r"
+	STANDBY = "|cffff5050(å¾…å‘½)|r"
 	
-	TITLE = "標題"
-	NOTES = "註記"
-	VERSION = "版本"
-	AUTHOR = "作者"
-	DATE = "日期"
-	CATEGORY = "類別"
+	TITLE = "æ¨™é¡Œ"
+	NOTES = "è¨»è¨˜"
+	VERSION = "ç‰ˆæœ¬"
+	AUTHOR = "ä½œè€…"
+	DATE = "æ—¥æœŸ"
+	CATEGORY = "é¡žåˆ¥"
 	EMAIL = "E-mail"
-	WEBSITE = "網站"
+	WEBSITE = "ç¶²ç«™"
+	CREDITS = "Credits" -- fix
 	
-	ABOUT = "關於"
-	PRINT_ADDON_INFO = "顯示插件資訊"
+	ABOUT = "é—œæ–¼"
+	PRINT_ADDON_INFO = "é¡¯ç¤ºæ’ä»¶è³‡è¨Š"
 	
 	CATEGORIES = {
-		["Action Bars"] = "動作列",
-		["Auction"] = "拍賣",
-		["Audio"] = "音樂",
-		["Battlegrounds/PvP"] = "戰場/PvP",
-		["Buffs"] = "增益",
-		["Chat/Communication"] = "聊天/通訊",
-		["Druid"] = "德魯伊",
-		["Hunter"] = "獵人",
-		["Mage"] = "法師",
-		["Paladin"] = "聖騎士",
-		["Priest"] = "牧師",
-		["Rogue"] = "盜賊",
-		["Shaman"] = "薩滿",
-		["Warlock"] = "術士",
-		["Warrior"] = "戰士",
-		["Healer"] = "治療者",
-		["Tank"] = "坦克",
-		["Caster"] = "施法者",
-		["Combat"] = "戰鬥",
-		["Compilations"] = "編輯",
-		["Data Export"] = "資料匯出",
-		["Development Tools"] = "開發工具",
-		["Guild"] = "公會",
-		["Frame Modification"] = "框架修改",
-		["Interface Enhancements"] = "介面增強",
-		["Inventory"] = "背包",
-		["Library"] = "資料庫",
-		["Map"] = "地圖",
-		["Mail"] = "郵件",
-		["Miscellaneous"] = "綜合",
-		["Quest"] = "任務",
-		["Raid"] = "團隊",
-		["Tradeskill"] = "商業技能",
-		["UnitFrame"] = "單位框架",
+		["Action Bars"] = "å‹•ä½œåˆ—",
+		["Auction"] = "æ‹è³£",
+		["Audio"] = "éŸ³æ¨‚",
+		["Battlegrounds/PvP"] = "æˆ°å ´/PvP",
+		["Buffs"] = "å¢žç›Š",
+		["Chat/Communication"] = "èŠå¤©/é€šè¨Š",
+		["Druid"] = "å¾·é­¯ä¼Š",
+		["Hunter"] = "çµäºº",
+		["Mage"] = "æ³•å¸«",
+		["Paladin"] = "è–é¨Žå£«",
+		["Priest"] = "ç‰§å¸«",
+		["Rogue"] = "ç›œè³Š",
+		["Shaman"] = "è–©æ»¿",
+		["Warlock"] = "è¡“å£«",
+		["Warrior"] = "æˆ°å£«",
+		["Healer"] = "æ²»ç™‚è€…",
+		["Tank"] = "å¦å…‹",
+		["Caster"] = "æ–½æ³•è€…",
+		["Combat"] = "æˆ°é¬¥",
+		["Compilations"] = "ç·¨è¼¯",
+		["Data Export"] = "è³‡æ–™åŒ¯å‡º",
+		["Development Tools"] = "é–‹ç™¼å·¥å…·",
+		["Guild"] = "å…¬æœƒ",
+		["Frame Modification"] = "æ¡†æž¶ä¿®æ”¹",
+		["Interface Enhancements"] = "ä»‹é¢å¢žå¼·",
+		["Inventory"] = "èƒŒåŒ…",
+		["Library"] = "è³‡æ–™åº«",
+		["Map"] = "åœ°åœ–",
+		["Mail"] = "éƒµä»¶",
+		["Miscellaneous"] = "ç¶œåˆ",
+		["Quest"] = "ä»»å‹™",
+		["Raid"] = "åœ˜éšŠ",
+		["Tradeskill"] = "å•†æ¥­æŠ€èƒ½",
+		["UnitFrame"] = "å–®ä½æ¡†æž¶",
 	}
 elseif GetLocale() == "zhCN" then
 	STANDBY = "|cffff5050(\230\154\130\230\140\130)|r"
@@ -236,6 +246,7 @@ elseif GetLocale() == "zhCN" then
 	CATEGORY = "\229\136\134\231\177\187"
 	EMAIL = "\231\148\181\229\173\144\233\130\174\228\187\182"
 	WEBSITE = "\231\189\145\231\171\153"
+	CREDITS = "Credits" -- fix
 	
 	ABOUT = "\229\133\179\228\186\142"
 	PRINT_ADDON_INFO = "\229\141\176\229\136\151\229\135\186\230\143\146\228\187\182\228\191\161\230\129\175"
@@ -287,6 +298,7 @@ else -- enUS
 	CATEGORY = "Category"
 	EMAIL = "E-mail"
 	WEBSITE = "Website"
+	CREDITS = "Credits"
 	
 	ABOUT = "About"
 	PRINT_ADDON_INFO = "Print out addon info"
@@ -331,7 +343,7 @@ end
 
 setmetatable(CATEGORIES, { __index = function(self, key) -- case-insensitive
 	local lowerKey = string.lower(key)
-	for k,v in CATEGORIES do
+	for k,v in pairs(CATEGORIES) do
 		if string.lower(k) == lowerKey then
 			return v
 		end
@@ -380,14 +392,17 @@ local function RegisterOnEnable(self)
 				if current.mixins then
 					for mixin in pairs(current.mixins) do
 						if type(mixin.OnEmbedEnable) == "function" then
-							mixin:OnEmbedEnable(self)
+							safecall(mixin.OnEmbedEnable,mixin,self)
 						end
 					end
 				end
 				current = current.super
 			end
 			if type(self.OnEnable) == "function" then
-				self:OnEnable()
+				safecall(self.OnEnable,self)
+			end
+			if AceEvent then
+				AceEvent:TriggerEvent("Ace2_AddonEnabled", self)
 			end
 		end
 	else
@@ -413,46 +428,52 @@ function AceAddon:InitializeAddon(addon, name)
 		-- TOC checks
 		if addon.title == nil then
 			addon.title = GetAddOnMetadata(name, "Title")
-			if addon.title then
-				local num = string.find(addon.title, " |cff7fff7f %-Ace2%-|r$")
-				if num then
-					addon.title = string.sub(addon.title, 1, num - 1)
-				end
-				addon.title = stripSpaces(addon.title)
-			end
 		end
+		if addon.title then
+			local num = string.find(addon.title, " |cff7fff7f %-Ace2%-|r$")
+			if num then
+				addon.title = string.sub(addon.title, 1, num - 1)
+			end
+			addon.title = stripSpaces(addon.title)
+		end
+		
 		if addon.notes == nil then
 			addon.notes = GetAddOnMetadata(name, "Notes")
 			addon.notes = stripSpaces(addon.notes)
 		end
 		if addon.version == nil then
 			addon.version = GetAddOnMetadata(name, "Version")
-			if addon.version then
-				if string.find(addon.version, "%$Revision: (%d+) %$") then
-					addon.version = string.gsub(addon.version, "%$Revision: (%d+) %$", "%1")
-				elseif string.find(addon.version, "%$Rev: (%d+) %$") then
-					addon.version = string.gsub(addon.version, "%$Rev: (%d+) %$", "%1")
-				elseif string.find(addon.version, "%$LastChangedRevision: (%d+) %$") then
-					addon.version = string.gsub(addon.version, "%$LastChangedRevision: (%d+) %$", "%1")
-				end
-			end
-			addon.version = stripSpaces(addon.version)
 		end
+		if addon.version then
+			if string.find(addon.version, "%$Revision: (%d+) %$") then
+				addon.version = string.gsub(addon.version, "%$Revision: (%d+) %$", "%1")
+			elseif string.find(addon.version, "%$Rev: (%d+) %$") then
+				addon.version = string.gsub(addon.version, "%$Rev: (%d+) %$", "%1")
+			elseif string.find(addon.version, "%$LastChangedRevision: (%d+) %$") then
+				addon.version = string.gsub(addon.version, "%$LastChangedRevision: (%d+) %$", "%1")
+			end
+		end
+		addon.version = stripSpaces(addon.version)
 		if addon.author == nil then
 			addon.author = GetAddOnMetadata(name, "Author")
 			addon.author = stripSpaces(addon.author)
 		end
+		if addon.credits == nil then
+			addon.credits = GetAddOnMetadata(name, "X-Credits")
+			addon.credits = stripSpaces(addon.credits)
+		end
 		if addon.date == nil then
 			addon.date = GetAddOnMetadata(name, "X-Date") or GetAddOnMetadata(name, "X-ReleaseDate")
-			if addon.date then
-				if string.find(addon.date, "%$Date: (.-) %$") then
-					addon.date = string.gsub(addon.date, "%$Date: (.-) %$", "%1")
-				elseif string.find(addon.date, "%$LastChangedDate: (.-) %$") then
-					addon.date = string.gsub(addon.date, "%$LastChangedDate: (.-) %$", "%1")
-				end
-			end
-			addon.date = stripSpaces(addon.date)
 		end
+		if addon.date then
+			if string.find(addon.date, "%$Date: (.-) %$") then
+				addon.date = string.gsub(addon.date, "%$Date: (.-) %$", "%1")
+			elseif string.find(addon.date, "%$LastChangedDate: (.-) %$") then
+				addon.date = string.gsub(addon.date, "%$LastChangedDate: (.-) %$", "%1")
+			end
+		end
+		addon.date = stripSpaces(addon.date)
+
 		if addon.category == nil then
 			addon.category = GetAddOnMetadata(name, "X-Category")
 			addon.category = stripSpaces(addon.category)
@@ -481,7 +502,10 @@ function AceAddon:InitializeAddon(addon, name)
 		current = current.super
 	end
 	if type(addon.OnInitialize) == "function" then
-		addon:OnInitialize(name)
+		safecall(addon.OnInitialize, addon, name)
+	end
+	if AceEvent then
+		AceEvent:TriggerEvent("Ace2_AddonInitialized", addon)
 	end
 	RegisterOnEnable(addon)
 end
@@ -509,6 +533,9 @@ function AceAddon.prototype:PrintAddonInfo()
 	print(x)
 	if self.author then
 		print(" - |cffffff7f" .. AUTHOR .. ":|r " .. tostring(self.author))
+	end
+	if self.credits then
+		print(" - |cffffff7f" .. CREDITS .. ":|r " .. tostring(self.credits))
 	end
 	if self.date then
 		print(" - |cffffff7f" .. DATE .. ":|r " .. tostring(self.date))
@@ -558,14 +585,17 @@ function AceAddon:PLAYER_LOGIN()
 					if current.mixins then
 						for mixin in pairs(current.mixins) do
 							if type(mixin.OnEmbedEnable) == "function" then
-								mixin:OnEmbedEnable(addon)
+								safecall(mixin.OnEmbedEnable,mixin,addon)
 							end
 						end
 					end
 					current = current.super
 				end
 				if type(addon.OnEnable) == "function" then
-					addon:OnEnable()
+					safecall(addon.OnEnable,addon)
+				end
+				if AceEvent then
+					AceEvent:TriggerEvent("Ace2_AddonEnabled", addon)
 				end
 			end
 		end
