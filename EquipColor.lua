@@ -528,11 +528,11 @@ function EquipColor:ColorItems(bag, slot, itemFrame, frame)
                     SetItemButtonTextureVertexColor(itemFrame, 0, 1, 1)
                     if frame ~= nil then EquipColor_BMsg("ColorItems(Recipes-Learned): Name ["..itemname.."] Player has already learned recipe") end
                 end
-            elseif (itemEquipLoc == "INVTYPE_TRINKET") then
-                if (CheckItemTooltip(bag:GetID(), slot:GetID(), itemEquipLoc) == false) then
-                    SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                    if frame ~= nil then EquipColor_BMsg("ColorItems(Trinkets-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]") end
-                end
+            --elseif (itemEquipLoc == "INVTYPE_TRINKET") then
+                --if (CheckItemTooltip(bag:GetID(), slot:GetID(), itemEquipLoc) == false) then
+                    --SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
+                    --if frame ~= nil then EquipColor_BMsg("ColorItems(Trinkets-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]") end
+                --end
             end
         end
     end
