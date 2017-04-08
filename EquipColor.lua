@@ -249,6 +249,17 @@ local function CheckItemTooltip(bag, slot, itemtype)
                 return false
             end
         end
+    elseif (itemtype == "Fishing Pole") then
+        local EquipColor_Tooltip = getglobal('EquipColor_ScanTooltipTextLeft8'):GetText()
+        if EquipColor_Tooltip then
+            --EquipColor_BMsg("CheckItemTooltip: Weapon_Tooltip ["..EquipColor_Tooltip.."]")
+            local _, _, profName, profLevel = string.find(EquipColor_Tooltip, "Requires (.+) %((%d+)%)")
+            if (profName and profLevel) then
+                return profName, profLevel
+            else
+                return false
+            end
+        end
     elseif (itemtype == "ClassArmor") then
         for ClassArmor = 7, 12 do
             local EquipColor_Tooltip = getglobal('EquipColor_ScanTooltipTextLeft'..ClassArmor):GetText()
@@ -414,14 +425,23 @@ function EquipColor:AddOnCore_SetItemColors(object, slot)
                 table.insert(self.slotsToColor, slot:GetName())
                 --EquipColor_BMsg("SetItemColors(AllItems-LevelCheck): Name ["..itemname.."] ID ["..itemid.."] SubClass ["..itemsubclass.."]")
             elseif ((itemclass == "Weapon" or itemclass == "Armor") and itemsubclass ~= "Miscellaneous") then
-                if (itemclass == "Armor") then
+                if (CheckCharacterSkills(itemsubclass) == false) then
+                    table.insert(self.slotsToColor, slot:GetName())
+                    --EquipColor_BMsg("SetItemColors(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
+                elseif (itemclass == "Weapon" and itemsubclass == "Fishing Pole") then
+                    local skillName, skillRank = CheckCharacterSkills("Fishing", true)
+                    local profName, profLevel = CheckItemTooltip(bag:GetID(), slot:GetID(), itemsubclass)
+                    if (profName == "Fishing" and skillName == "Fishing") then
+                        if (tonumber(profLevel) > skillRank) then
+                            table.insert(self.slotsToColor, slot:GetName())
+                            --EquipColor_BMsg("SetItemColors(Fishing Pole-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]")
+                        end
+                    end
+                elseif (itemclass == "Armor") then
                     if CheckItemTooltip(bag:GetID(), slot:GetID(), "ClassArmor") == false then
                         table.insert(self.slotsToColor, slot:GetName())
                         --EquipColor_BMsg("SetItemColors(ClassArmor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                     end
-                elseif (CheckCharacterSkills(itemsubclass) == false) then
-                    table.insert(self.slotsToColor, slot:GetName())
-                    --EquipColor_BMsg("SetItemColors(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                 elseif (CheckCharacterSpells("Dual Wield") == false) then
                     if (CheckItemTooltip(bag:GetID(), slot:GetID(), itemclass) == true) then
                         table.insert(self.slotsToColor, slot:GetName())
@@ -482,14 +502,23 @@ function EquipColor:ColorItems(bag, slot, itemFrame, frame)
                 SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
                 if frame ~= nil then EquipColor_BMsg("ColorItems(AllItems-LevelCheck): Name ["..itemname.."] ID ["..itemid.."] SubClass ["..itemsubclass.."]") end
             elseif ((itemclass == "Weapon" or itemclass == "Armor") and itemsubclass ~= "Miscellaneous") then
-                if (itemclass == "Armor") then
+                if (CheckCharacterSkills(itemsubclass) == false) then
+                    SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
+                    if frame ~= nil then EquipColor_BMsg("ColorItems(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
+                elseif (itemclass == "Weapon" and itemsubclass == "Fishing Pole") then
+                    local skillName, skillRank = CheckCharacterSkills("Fishing", true)
+                    local profName, profLevel = CheckItemTooltip(bag, slot, itemsubclass)
+                    if (profName == "Fishing" and skillName == "Fishing") then
+                        if (tonumber(profLevel) > skillRank) then
+                            SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
+                            if frame ~= nil then EquipColor_BMsg("SetItemColors(Fishing Pole-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]") end
+                        end
+                    end
+                elseif (itemclass == "Armor") then
                     if CheckItemTooltip(bag, slot, "ClassArmor") == false then
                         SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
                         if frame ~= nil then EquipColor_BMsg("SetItemColors(ClassArmor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                     end
-                elseif (CheckCharacterSkills(itemsubclass) == false) then
-                    SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                    if frame ~= nil then EquipColor_BMsg("ColorItems(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                 elseif (CheckCharacterSpells("Dual Wield") == false) then
                     if (CheckItemTooltip(bag, slot, itemclass) == true) then
                         SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
