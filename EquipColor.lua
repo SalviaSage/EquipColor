@@ -135,6 +135,7 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         EquipColor:ColorUnusableBankItems()
         EquipColor:AddOnCore_ContainerFrame_Update()
     elseif (event == "PLAYERBANKSLOTS_CHANGED" or event == "BANKFRAME_OPENED") then
+        EquipColor:ColorUnusableItems()
         EquipColor:ColorUnusableBankItems()
     end
 end
