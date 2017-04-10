@@ -125,17 +125,14 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
     if not (IsAddOnLoaded("Bagnon_Core") and OneCore ~= nil) then
         if (arg1 == "LeftButton") or (arg1 == "RightButton") then
             EquipColor:ColorUnusableItems()
+            EquipColor:ColorUnusableBankItems()
         end
     end
     if (event == "MAIL_INBOX_UPDATE") then
         EquipColor:ColorUnusableMailItemsInSlot()
     elseif (event == "BAG_UPDATE" or event == "ITEM_LOCK_CHANGED" or event == "BAG_UPDATE_COOLDOWN" or event == "UPDATE_INVENTORY_ALERTS") then
-        if EquipColor.BagFrames[1].bagsShown > 1 then
-            EquipColor:ColorUnusableItems()
-        end
-        if BankFrame:IsVisible() then
-            EquipColor:ColorUnusableBankItems()
-        end
+        EquipColor:ColorUnusableItems()
+        EquipColor:ColorUnusableBankItems()
         EquipColor:AddOnCore_ContainerFrame_Update()
     elseif (event == "PLAYERBANKSLOTS_CHANGED" or event == "BANKFRAME_OPENED") then
         EquipColor:ColorUnusableBankItems()
@@ -582,12 +579,14 @@ end
 
 ---[[ Called by the Bag OnEvent handler to update all bags and slots.
 function EquipColor:ColorUnusableItems()
-    for bag = 0, 12 do
-        for slot = 1, GetContainerNumSlots(bag) do
-            local bagName = GetContainerFrameName(bag)
-            if bagName == nil then return end
-            local itemFrame = getglobal(bagName.."Item"..(GetContainerNumSlots(bag)-(slot-1)))
-            EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableItems")
+    if EquipColor.BagFrames[1].bagsShown > 1 then
+        for bag = 0, 12 do
+            for slot = 1, GetContainerNumSlots(bag) do
+                local bagName = GetContainerFrameName(bag)
+                if bagName == nil then return end
+                local itemFrame = getglobal(bagName.."Item"..(GetContainerNumSlots(bag)-(slot-1)))
+                EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableItems")
+            end
         end
     end
 end
@@ -595,30 +594,36 @@ end
 
 ---[[ Called by the Bag OnShow hooks handler. Updates the toggled bag.
 function EquipColor:ColorUnusableItemsInBag(bag)
-    for slot = 1, GetContainerNumSlots(bag) do
-        local bagName = GetContainerFrameName(bag)
-        if bagName == nil then return end
-        local itemFrame = getglobal(bagName.."Item"..(GetContainerNumSlots(bag)-(slot-1)))
-        EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableItemsInBag")
+    if EquipColor.BagFrames[1].bagsShown > 1 then
+        for slot = 1, GetContainerNumSlots(bag) do
+            local bagName = GetContainerFrameName(bag)
+            if bagName == nil then return end
+            local itemFrame = getglobal(bagName.."Item"..(GetContainerNumSlots(bag)-(slot-1)))
+            EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableItemsInBag")
+        end
     end
 end
 --]]
 
 ---[[ Called by the Bank OnEvent handler to update all visible Bank bags and slots.
 function EquipColor:ColorUnusableBankItems()
-    local bag = BANK_CONTAINER
-    for slot = 1, GetContainerNumSlots(bag) do
-        local itemFrame = getglobal("BankFrameItem"..slot)
-        EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItems")
+    if BankFrame:IsVisible() then
+        local bag = BANK_CONTAINER
+        for slot = 1, GetContainerNumSlots(bag) do
+            local itemFrame = getglobal("BankFrameItem"..slot)
+            EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItems")
+        end
     end
 end
 --]]
 
 ---[[ Called by the Bank OnShow handler. Updates the main bank frame and each toggled bag.
 function EquipColor:ColorUnusableBankItemsInSlot(slot)
-    local bag = BANK_CONTAINER
-    local itemFrame = getglobal("BankFrameItem"..slot)
-    EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItemsInSlot")
+    if BankFrame:IsVisible() then
+        local bag = BANK_CONTAINER
+        local itemFrame = getglobal("BankFrameItem"..slot)
+        EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItemsInSlot")
+    end
 end
 --]]
 
