@@ -86,11 +86,15 @@ end
 -- OnEvent
 ---------------------------------------------------------------------------------------------------
 function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-
     --if event then EquipColor_BMsg("EquipColor_OnEvent: event ["..event.."]") end
     --if arg1 then EquipColor_BMsg("EquipColor_OnEvent: arg1 ["..arg1.."]") end
 
-    -- OneBag Support
+    -- Default WoW Client: MerchantFrame Hook
+    if (not EquipColor:IsHooked("MerchantFrame_Update")) then
+        EquipColor:SecureHook("MerchantFrame_Update", "ColorUnusableMerchantItems")
+    end
+
+    -- OneBag: Standard Events
     if (OneCore ~= nil) then
         if (arg1 == "LeftButton") or (arg1 == "RightButton") then
             EquipColor_changedFrames = EquipColor_changedFrames + 1
@@ -103,7 +107,7 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         end
     end
 
-    -- Bagnon Support
+    -- Bagnon: Standard Events
     if (IsAddOnLoaded("Bagnon_Core")) then
         if (arg1 == "LeftButton") or (arg1 == "RightButton") then
             EquipColor_changedFrames = EquipColor_changedFrames + 1
@@ -116,7 +120,7 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         end
     end
 
-    -- Standard Events
+    -- Default WoW Client: Standard Events
     if not (IsAddOnLoaded("Bagnon_Core") and OneCore ~= nil) then
         if (arg1 == "LeftButton") or (arg1 == "RightButton") then
             EquipColor:ColorUnusableItems()
@@ -240,6 +244,8 @@ local function CheckItemTooltip(bag, slot, itemtype)
         EquipColor_ScanTooltip:SetInventoryItem("player", GetBankFrameInventorySlot(slot))
     elseif (bag == "MailBox") then
         EquipColor_ScanTooltip:SetInboxItem(slot)
+    elseif (bag == "Merchant") then
+        EquipColor_ScanTooltip:SetMerchantItem(slot)
     else
         EquipColor_ScanTooltip:SetBagItem(bag, slot)
     end
@@ -636,6 +642,26 @@ function EquipColor:ColorUnusableMailItemsInSlot()
                     getglobal("MailItem"..i.."ButtonIcon"):SetVertexColor(1, 0, 0)
                     SetDesaturation(getglobal("MailItem"..i.."ButtonIcon"),nil)
                     --EquipColor_BMsg("ColorUnusableMailItemsInSlot: Can't use item ["..i.."]")
+                end
+            end
+        end
+    end
+end
+---------------------------------------------------------------------------------------------------
+-- Called by the Merchant OnShow handler.
+---------------------------------------------------------------------------------------------------
+function EquipColor:ColorUnusableMerchantItems()
+    if MerchantFrame:IsVisible() then
+        local numMerchantItems = GetMerchantNumItems()
+        for i=1, MERCHANT_ITEMS_PER_PAGE, 1 do
+            local index = (((MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE) + i)
+            local itemButton = getglobal("MerchantItem"..i.."ItemButton")
+            if ( index <= numMerchantItems ) then
+                local itemName, _, _, _, _, _ = GetMerchantItemInfo(index)
+                local hasLearned = CheckItemTooltip("Merchant", index, "Learned")
+                if hasLearned then
+                    SetItemButtonTextureVertexColor(itemButton, 0, 1, 0)
+                    EquipColor_BMsg("ColorUnusableMerchantItems: Player has already learned: "..itemName)
                 end
             end
         end
