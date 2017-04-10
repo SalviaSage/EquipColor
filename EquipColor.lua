@@ -1,11 +1,10 @@
 ---------------------------------------------------------------------------------------------------
--- EquipColor
+-- EquipColor, an addon for WoW 1.12.1
 -- Version: 1.0
 ---------------------------------------------------------------------------------------------------
---///////////////////////////////////////////////////////////////////////////////////////////////--
----------------------------------------------------------------------------------------------------
+
 EquipColor = AceLibrary("AceAddon-2.0"):new("AceHook-2.1") -- hooking mixin
----------------------------------------------------------------------------------------------------
+---[[
 function EquipColor:OnInitialize()
     --Player Bags
     self:HookScript(ContainerFrame1, "OnShow", "BagFrame_OnShow")
@@ -64,9 +63,9 @@ function EquipColor:OnInitialize()
         ContainerFrame12
     }
 end
----------------------------------------------------------------------------------------------------
--- OnShow Functions
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ OnShow Functions
 function EquipColor:BagFrame_OnShow(frame)
     --if (frame ~= nil) then
     --    EquipColor_BMsg("Bag: "..frame:GetID())
@@ -74,7 +73,9 @@ function EquipColor:BagFrame_OnShow(frame)
     self:ColorUnusableItemsInBag(frame:GetID())
     return self.hooks[frame].OnShow(frame)
 end
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[
 function EquipColor:BankFrame_OnShow(frame)
     --if (frame ~= nil) then
     --    EquipColor_BMsg("Bank Slot: "..frame:GetID())
@@ -82,9 +83,9 @@ function EquipColor:BankFrame_OnShow(frame)
     self:ColorUnusableBankItemsInSlot(frame:GetID())
     return self.hooks[frame].OnShow(frame)
 end
----------------------------------------------------------------------------------------------------
--- OnEvent
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ OnEvent
 function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
     --if event then EquipColor_BMsg("EquipColor_OnEvent: event ["..event.."]") end
     --if arg1 then EquipColor_BMsg("EquipColor_OnEvent: arg1 ["..arg1.."]") end
@@ -140,9 +141,9 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         EquipColor:ColorUnusableBankItems()
     end
 end
----------------------------------------------------------------------------------------------------
--- OnUpdate
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ OnUpdate
 EquipColor_checkFrames = 1
 EquipColor_changedFrames = 1
 function EquipColor_OnUpdate(arg1)
@@ -153,9 +154,9 @@ function EquipColor_OnUpdate(arg1)
         EquipColor_changedFrames = table.getn(EquipColor.slotsToColor)
     end
 end
----------------------------------------------------------------------------------------------------
--- OnLoad
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ OnLoad
 function EquipColor_OnLoad()
     this:RegisterEvent("BAG_UPDATE")
     this:RegisterEvent("ITEM_LOCK_CHANGED")
@@ -165,15 +166,15 @@ function EquipColor_OnLoad()
     this:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
     this:RegisterEvent("MAIL_INBOX_UPDATE")
 end
----------------------------------------------------------------------------------------------------
--- Debug Parser
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Debug Parser
 function EquipColor_BMsg(msg)
     ChatFrame1:AddMessage(msg or 'nil', 0,1,0.4)
 end
----------------------------------------------------------------------------------------------------
--- Item Link Parser
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Item Link Parser
 local function GetFromLink(link)
     local id = -1
     local name = "Unknown"
@@ -185,9 +186,9 @@ local function GetFromLink(link)
     end
     return id, name
 end
----------------------------------------------------------------------------------------------------
--- Frame Name Parser
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Frame Name Parser
 function GetContainerFrameName(id)
     if (ContainerFrame1:GetID() == id) then return "ContainerFrame1" end
     if (ContainerFrame2:GetID() == id) then return "ContainerFrame2" end
@@ -203,10 +204,10 @@ function GetContainerFrameName(id)
     if (ContainerFrame12:GetID() == id) then return "ContainerFrame12" end
     return nil
 end
----------------------------------------------------------------------------------------------------
--- Inventory ID's are different from SlotID's, so we need a translator to properly parse bank
+--]]
+
+---[[ Inventory ID's are different from SlotID's, so we need a translator to properly parse bank
 -- slot item tooltips. Otherwise, we can't read the tooltips to find out if it's usable.
----------------------------------------------------------------------------------------------------
 local function GetBankFrameInventorySlot(slot)
     if (BankFrameItem1:GetID() == slot) then return 40 end
     if (BankFrameItem2:GetID() == slot) then return 41 end
@@ -234,10 +235,10 @@ local function GetBankFrameInventorySlot(slot)
     if (BankFrameItem24:GetID() == slot) then return 63 end
     return nil
 end
----------------------------------------------------------------------------------------------------
--- Parses Recipe and Trinket tooltips from the players bags or bank slots. This is done
+--]]
+
+---[[ Parses Recipe and Trinket tooltips from the players bags or bank slots. This is done
 -- automatically without the player having to hover over an item manually.
----------------------------------------------------------------------------------------------------
 local function CheckItemTooltip(bag, slot, itemtype)
     EquipColor_ScanTooltip:ClearLines()
     if (bag == -1) then
@@ -331,10 +332,10 @@ local function CheckItemTooltip(bag, slot, itemtype)
         return false
     end
 end
----------------------------------------------------------------------------------------------------
--- Parses weapons and checks the players skill sheet. Passing a 'skill' is required but passing a
+--]]
+
+---[[ Parses weapons and checks the players skill sheet. Passing a 'skill' is required but passing a
 -- 'rank' is optional. Returns skill or skill and rank or false.
----------------------------------------------------------------------------------------------------
 function CheckCharacterSkills(skill, rank)
     local retSubclass = skill
     if (retSubclass == "One-Handed Axes") then
@@ -373,9 +374,9 @@ function CheckCharacterSkills(skill, rank)
     end
     return false
 end
----------------------------------------------------------------------------------------------------
--- Checks the players spell box for a spell and returns true or false.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Checks the players spell box for a spell and returns true or false.
 function CheckCharacterSpells(spell)
     local i = 1
     while true do
@@ -391,10 +392,10 @@ function CheckCharacterSpells(spell)
     end
     return false
 end
----------------------------------------------------------------------------------------------------
--- AddOn compatibility functions. Currently supports Bagnon and OneBag: When ever an Hooked AddOn
+--]]
+
+---[[ AddOn compatibility functions. Currently supports Bagnon and OneBag: When ever an Hooked AddOn
 -- fucntion is called this is called after it to re-color the slots we want to show up.
----------------------------------------------------------------------------------------------------
 function EquipColor:AddOnCore_ContainerFrame_Update(object)
     --EquipColor_BMsg("AddOnCore_ContainerFrame_Update: Fired!")
     for k,v in pairs(self.slotsToColor) do
@@ -409,9 +410,9 @@ function EquipColor:AddOnCore_ContainerFrame_Update(object)
         end
     end
 end
----------------------------------------------------------------------------------------------------
--- Certain Hooked Functions will trigger a DB clear to keep the table from getting too big.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Certain Hooked Functions will trigger a DB clear to keep the table from getting too big.
 function EquipColor:AddOnCore_ClearContainerFrameTable(slot)
     for k,v in pairs(EquipColor.slotsToColor) do
         if v == slot then
@@ -419,9 +420,9 @@ function EquipColor:AddOnCore_ClearContainerFrameTable(slot)
         end
     end
 end
----------------------------------------------------------------------------------------------------
--- Core function for AddOn compatibility.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Core function for AddOn compatibility.
 function EquipColor:AddOnCore_SetItemColors(object, slot)
     if slot == nil then slot = object end
     EquipColor:AddOnCore_ClearContainerFrameTable(slot:GetName())
@@ -500,9 +501,9 @@ function EquipColor:AddOnCore_SetItemColors(object, slot)
         end
     end
 end
----------------------------------------------------------------------------------------------------
--- Main EquipColor Core Function. This is called by all core functions below it.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Main EquipColor Core Function. This is called by all core functions below it.
 function EquipColor:ColorItems(bag, slot, itemFrame, frame)
     local itemid, name = GetFromLink(GetContainerItemLink(bag, slot))
     if (itemid ~= -1 and name ~= "Unknown") then
@@ -577,9 +578,9 @@ function EquipColor:ColorItems(bag, slot, itemFrame, frame)
         end
     end
 end
----------------------------------------------------------------------------------------------------
--- Called by the Bag OnEvent handler to update all bags and slots.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Called by the Bag OnEvent handler to update all bags and slots.
 function EquipColor:ColorUnusableItems()
     for bag = 0, 12 do
         for slot = 1, GetContainerNumSlots(bag) do
@@ -590,9 +591,9 @@ function EquipColor:ColorUnusableItems()
         end
     end
 end
----------------------------------------------------------------------------------------------------
--- Called by the Bag OnShow hooks handler. Updates the toggled bag.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Called by the Bag OnShow hooks handler. Updates the toggled bag.
 function EquipColor:ColorUnusableItemsInBag(bag)
     for slot = 1, GetContainerNumSlots(bag) do
         local bagName = GetContainerFrameName(bag)
@@ -601,9 +602,9 @@ function EquipColor:ColorUnusableItemsInBag(bag)
         EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableItemsInBag")
     end
 end
----------------------------------------------------------------------------------------------------
--- Called by the Bank OnEvent handler to update all visible Bank bags and slots.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Called by the Bank OnEvent handler to update all visible Bank bags and slots.
 function EquipColor:ColorUnusableBankItems()
     local bag = BANK_CONTAINER
     for slot = 1, GetContainerNumSlots(bag) do
@@ -611,17 +612,17 @@ function EquipColor:ColorUnusableBankItems()
         EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItems")
     end
 end
----------------------------------------------------------------------------------------------------
--- Called by the Bank OnShow handler. Updates the main bank frame and each toggled bag.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Called by the Bank OnShow handler. Updates the main bank frame and each toggled bag.
 function EquipColor:ColorUnusableBankItemsInSlot(slot)
     local bag = BANK_CONTAINER
     local itemFrame = getglobal("BankFrameItem"..slot)
     EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItemsInSlot")
 end
----------------------------------------------------------------------------------------------------
--- Called by the Mail OnShow handler.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Called by the Mail OnShow handler.
 function EquipColor:ColorUnusableMailItemsInSlot()
     if MailFrame:IsVisible() then
         local numItems = GetInboxNumItems()
@@ -647,9 +648,9 @@ function EquipColor:ColorUnusableMailItemsInSlot()
         end
     end
 end
----------------------------------------------------------------------------------------------------
--- Called by the Merchant OnShow handler.
----------------------------------------------------------------------------------------------------
+--]]
+
+---[[ Called by the Merchant OnShow handler.
 function EquipColor:ColorUnusableMerchantItems()
     if MerchantFrame:IsVisible() then
         local numMerchantItems = GetMerchantNumItems()
@@ -671,3 +672,4 @@ function EquipColor:ColorUnusableMerchantItems()
         end
     end
 end
+--]]
