@@ -650,7 +650,7 @@ function EquipColor:ColorUnusableMailItemsInSlot()
 end
 --]]
 
----[[ Called by the Merchant OnShow handler.
+---[[ Called by the Default WoW Client Event handler.
 function EquipColor:ColorUnusableMerchantItems()
     if MerchantFrame:IsVisible() then
         local numMerchantItems = GetMerchantNumItems()
@@ -666,7 +666,7 @@ function EquipColor:ColorUnusableMerchantItems()
                     SetItemButtonSlotVertexColor(merchantButton, 0, 1, 0)
                     SetItemButtonTextureVertexColor(itemButton, 0, 1, 0)
                     SetItemButtonNormalTextureVertexColor(itemButton, 0, 1, 0)
-                    EquipColor_BMsg("ColorUnusableMerchantItems: Player has already learned: "..itemName)
+                    --EquipColor_BMsg("ColorUnusableMerchantItems: Player has already learned: "..itemName)
                 end
             end
         end
