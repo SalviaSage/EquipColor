@@ -656,11 +656,15 @@ function EquipColor:ColorUnusableMerchantItems()
         for i=1, MERCHANT_ITEMS_PER_PAGE, 1 do
             local index = (((MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE) + i)
             local itemButton = getglobal("MerchantItem"..i.."ItemButton")
+            local merchantButton = getglobal("MerchantItem"..i)
             if ( index <= numMerchantItems ) then
                 local itemName, _, _, _, _, _ = GetMerchantItemInfo(index)
                 local hasLearned = CheckItemTooltip("Merchant", index, "Learned")
                 if hasLearned then
+                    SetItemButtonNameFrameVertexColor(merchantButton, 0, 1, 0)
+                    SetItemButtonSlotVertexColor(merchantButton, 0, 1, 0)
                     SetItemButtonTextureVertexColor(itemButton, 0, 1, 0)
+                    SetItemButtonNormalTextureVertexColor(itemButton, 0, 1, 0)
                     EquipColor_BMsg("ColorUnusableMerchantItems: Player has already learned: "..itemName)
                 end
             end
