@@ -117,6 +117,11 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
     end
 
     -- Standard Events
+    if not (IsAddOnLoaded("Bagnon_Core") and OneCore ~= nil) then
+        if (arg1 == "LeftButton") or (arg1 == "RightButton") then
+            EquipColor:ColorUnusableItems()
+        end
+    end
     if (event == "MAIL_INBOX_UPDATE") then
         EquipColor:ColorUnusableMailItemsInSlot()
     elseif (event == "BAG_UPDATE" or event == "ITEM_LOCK_CHANGED" or event == "BAG_UPDATE_COOLDOWN" or event == "UPDATE_INVENTORY_ALERTS") then
