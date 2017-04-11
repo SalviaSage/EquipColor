@@ -198,7 +198,7 @@ end
 --]]
 
 ---[[ Item Link Parser
-function GetFromLink(link)
+local function GetFromLink(link)
     local id = -1
     local name = "Unknown"
     if (link ~= nil) then
