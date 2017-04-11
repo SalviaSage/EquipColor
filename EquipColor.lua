@@ -121,8 +121,21 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         end
     end
 
+    -- EngInventory : Standard Events
+    if (IsAddOnLoaded("EngBags")) then
+        if (arg1 == "LeftButton") or (arg1 == "RightButton") then
+            EquipColor_changedFrames = EquipColor_changedFrames + 1
+        end
+        if (not EquipColor:IsHooked("EngBank_UpdateButton")) then
+            EquipColor:SecureHook("EngBank_UpdateButton", "AddOnCore_SetItemColors")
+        end
+        if (not EquipColor:IsHooked("EngInventory_UpdateButton")) then
+            EquipColor:SecureHook("EngInventory_UpdateButton", "AddOnCore_SetItemColors")
+        end
+    end
+
     -- Default WoW Client: Standard Events
-    if not (IsAddOnLoaded("Bagnon_Core") and OneCore ~= nil) then
+    if not (IsAddOnLoaded("Bagnon_Core") and OneCore ~= nil and IsAddOnLoaded("EngBags")) then
         if (arg1 == "LeftButton" or arg1 == "RightButton") then
             if (EquipColor.BagFrames[1].bagsShown > 0) then
                 EquipColor:ColorUnusableItems()
@@ -179,13 +192,13 @@ end
 --]]
 
 ---[[ Debug Parser
-local function EquipColor_BMsg(msg)
+function EquipColor_BMsg(msg)
     ChatFrame1:AddMessage(msg or 'nil', 0,1,0.4)
 end
 --]]
 
 ---[[ Item Link Parser
-local function GetFromLink(link)
+function GetFromLink(link)
     local id = -1
     local name = "Unknown"
     if (link ~= nil) then
@@ -422,91 +435,105 @@ end
 --]]
 
 ---[[ Core function.
-function EquipColor:AddOnCore_SetItemColors(object, slot)
-    if (slot == nil) then slot = object end
-    EquipColor:AddOnCore_ClearContainerFrameTable(slot:GetName())
-    local bag = slot:GetParent()
-    local itemid, name = GetFromLink(GetContainerItemLink(bag:GetID(), slot:GetID()))
-    --EquipColor_BMsg("SetItemColors: bag ["..bag:GetID().."] slot ["..slot:GetID().."]")
+function EquipColor:AddOnCore_SetItemColors(slot, object)
+    if (OneCore ~= nil) then
+        slot = object
+        object = slot
+    end
+    local bag, bagn, slotn, item
+    if (IsAddOnLoaded("Bagnon_Core") or OneCore ~= nil) then
+        bag = slot:GetParent()
+        bagn = bag:GetID()
+        slotn = slot:GetID()
+        item = slot:GetName()
+    end
+    if (IsAddOnLoaded("EngBags")) then
+        bagn = object["bagnum"]
+        slotn = object["slotnum"]
+        item = slot:GetName()
+    end
+    EquipColor:AddOnCore_ClearContainerFrameTable(item)
+    local itemid, name = GetFromLink(GetContainerItemLink(bagn, slotn))
+    --EquipColor_BMsg("SetItemColors: bag ["..bagn.."] slot ["..slotn.."]")
     if (itemid ~= -1 and name ~= "Unknown") then
         local itemname, _, _, itemminlevel, itemclass, itemsubclass, _, itemEquipLoc = GetItemInfo(itemid)
         if (itemclass ~= nil and itemsubclass ~= nil) then
             --EquipColor_BMsg("SetItemColors(Items): ItemName ["..itemname.."] ItemID ["..itemid.."]")
             if (itemminlevel > UnitLevel("player")) then
-                table.insert(self.slotsToColor, slot:GetName())
+                table.insert(self.slotsToColor, item)
                 --EquipColor_BMsg("SetItemColors(AllItems-LevelCheck): Name ["..itemname.."] ID ["..itemid.."] SubClass ["..itemsubclass.."]")
             elseif ((itemclass == "Weapon" or itemclass == "Armor") and itemsubclass ~= "Miscellaneous") then
                 if (CheckCharacterSkills(itemsubclass) == false) then
-                    table.insert(self.slotsToColor, slot:GetName())
+                    table.insert(self.slotsToColor, item)
                     --EquipColor_BMsg("SetItemColors(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                 elseif (itemclass == "Weapon" and itemsubclass == "Fishing Pole") then
                     local skillName, skillRank = CheckCharacterSkills("Fishing", true)
-                    local profName, profLevel = CheckItemTooltip(bag:GetID(), slot:GetID(), itemsubclass)
+                    local profName, profLevel = CheckItemTooltip(bagn, slotn, itemsubclass)
                     if (profName == "Fishing" and skillName == "Fishing") then
                         if (tonumber(profLevel) > skillRank) then
-                            table.insert(self.slotsToColor, slot:GetName())
+                            table.insert(self.slotsToColor, item)
                             --EquipColor_BMsg("SetItemColors(Fishing Pole-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]")
                         end
                     end
                 elseif (itemclass == "Armor") then
-                    if (CheckItemTooltip(bag:GetID(), slot:GetID(), "ClassArmor") == false) then
-                        table.insert(self.slotsToColor, slot:GetName())
+                    if (CheckItemTooltip(bagn, slotn, "ClassArmor") == false) then
+                        table.insert(self.slotsToColor, item)
                         --EquipColor_BMsg("SetItemColors(ClassArmor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                     end
                 elseif (CheckCharacterSpells("Dual Wield") == false) then
-                    if (CheckItemTooltip(bag:GetID(), slot:GetID(), itemclass) == true) then
-                        table.insert(self.slotsToColor, slot:GetName())
+                    if (CheckItemTooltip(bagn, slotn, itemclass) == true) then
+                        table.insert(self.slotsToColor, item)
                         --EquipColor_BMsg("SetItemColors(Weapon-Off Hand): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                     end
                 end
             elseif (itemclass == "Projectile" or itemclass == "Quiver")then
                 if (CheckCharacterSkills("Bows") == false and CheckCharacterSkills("Crossbows") == false) then
                     if (itemsubclass == "Arrow" or itemsubclass == "Quiver") then
-                        table.insert(self.slotsToColor, slot:GetName())
+                        table.insert(self.slotsToColor, item)
                         --EquipColor_BMsg("SetItemColors(Arrows&Quivers): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                     end
                 end
                 if (CheckCharacterSkills("Guns") == false) then
                     if (itemsubclass == "Bullet" or itemsubclass == "Ammo Pouch") then
-                        table.insert(self.slotsToColor, slot:GetName())
+                        table.insert(self.slotsToColor, item)
                         --EquipColor_BMsg("SetItemColors(Bullets&Pouches): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]")
                     end
                 end
             elseif (itemclass == "Recipe") then
-                local profName, profLevel = CheckItemTooltip(bag:GetID(), slot:GetID(), itemclass)
+                local profName, profLevel = CheckItemTooltip(bagn, slotn, itemclass)
                 if (profName and profLevel) then
                     if (CheckCharacterSkills(profName) == false) then
-                        table.insert(self.slotsToColor, slot:GetName())
+                        table.insert(self.slotsToColor, item)
                         --EquipColor_BMsg("SetItemColors(Recipes-ProfCheck):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]")
                     else
                         local skillName, skillRank = CheckCharacterSkills(profName, true)
                         if (tonumber(profLevel) > skillRank) then
-                            table.insert(self.slotsToColor, slot:GetName())
+                            table.insert(self.slotsToColor, item)
                             --EquipColor_BMsg("SetItemColors(Recipes-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]")
                         end
                     end
                 end
-                local hasLearned = CheckItemTooltip(bag:GetID(), slot:GetID(), "Learned")
+                local hasLearned = CheckItemTooltip(bagn, slotn, "Learned")
                 if (hasLearned) then
-                    table.insert(self.slotsToColor, slot:GetName().."Learned")
+                    table.insert(self.slotsToColor, item.."Learned")
                     --EquipColor_BMsg("SetItemColors(Recipes-Learned): Name ["..itemname.."] Player has already learned recipe")
                 end
                 if (itemsubclass == "Book") then
-                    if (CheckItemTooltip(bag:GetID(), slot:GetID(), "Book") == false) then
-                        table.insert(self.slotsToColor, slot:GetName())
+                    if (CheckItemTooltip(bagn, slotn, "Book") == false) then
+                        table.insert(self.slotsToColor, item)
                         --EquipColor_BMsg("SetItemColors(Book-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]")
                     end
                 end
             elseif (itemclass == "Miscellaneous") then
                 if (itemsubclass == "Junk") then
-                    if (CheckItemTooltip(bag:GetID(), slot:GetID(), "Book") == false) then
-                        table.insert(self.slotsToColor, slot:GetName())
+                    if (CheckItemTooltip(bagn, slotn, "Book") == false) then
+                        table.insert(self.slotsToColor, item)
                         --EquipColor_BMsg("SetItemColors(Book-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]")
                     end
                 end
             elseif (itemEquipLoc == "INVTYPE_TRINKET") then
-                if (CheckItemTooltip(bag:GetID(), slot:GetID(), itemEquipLoc) == false) then
-                    table.insert(self.slotsToColor, slot:GetName())
+                if (CheckItemTooltip(bagn, slotn, itemEquipLoc) == false) then
+                    table.insert(self.slotsToColor, item)
                     --EquipColor_BMsg("SetItemColors(Trinkets-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]")
                 end
             end
