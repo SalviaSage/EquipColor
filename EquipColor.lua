@@ -124,19 +124,31 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
     -- Default WoW Client: Standard Events
     if not (IsAddOnLoaded("Bagnon_Core") and OneCore ~= nil) then
         if (arg1 == "LeftButton") or (arg1 == "RightButton") then
-            EquipColor:ColorUnusableItems()
-            EquipColor:ColorUnusableBankItems()
+            if EquipColor.BagFrames[1].bagsShown > 0 then
+                EquipColor:ColorUnusableItems()
+            end
+            if BankFrame:IsVisible() then
+                EquipColor:ColorUnusableBankItems()
+            end
         end
     end
     if (event == "MAIL_INBOX_UPDATE") then
         EquipColor:ColorUnusableMailItemsInSlot()
     elseif (event == "BAG_UPDATE" or event == "ITEM_LOCK_CHANGED" or event == "BAG_UPDATE_COOLDOWN" or event == "UPDATE_INVENTORY_ALERTS") then
-        EquipColor:ColorUnusableItems()
-        EquipColor:ColorUnusableBankItems()
+        if EquipColor.BagFrames[1].bagsShown > 0 then
+            EquipColor:ColorUnusableItems()
+        end
+        if BankFrame:IsVisible() then
+            EquipColor:ColorUnusableBankItems()
+        end
         EquipColor:AddOnCore_ContainerFrame_Update()
     elseif (event == "PLAYERBANKSLOTS_CHANGED" or event == "BANKFRAME_OPENED") then
-        EquipColor:ColorUnusableItems()
-        EquipColor:ColorUnusableBankItems()
+        if EquipColor.BagFrames[1].bagsShown > 0 then
+            EquipColor:ColorUnusableItems()
+        end
+        if BankFrame:IsVisible() then
+            EquipColor:ColorUnusableBankItems()
+        end
     end
 end
 --]]
@@ -167,7 +179,7 @@ end
 --]]
 
 ---[[ Debug Parser
-function EquipColor_BMsg(msg)
+local function EquipColor_BMsg(msg)
     ChatFrame1:AddMessage(msg or 'nil', 0,1,0.4)
 end
 --]]
@@ -186,57 +198,30 @@ local function GetFromLink(link)
 end
 --]]
 
----[[ Frame Name Parser
-function GetContainerFrameName(id)
-    if (ContainerFrame1:GetID() == id) then return "ContainerFrame1" end
-    if (ContainerFrame2:GetID() == id) then return "ContainerFrame2" end
-    if (ContainerFrame3:GetID() == id) then return "ContainerFrame3" end
-    if (ContainerFrame4:GetID() == id) then return "ContainerFrame4" end
-    if (ContainerFrame5:GetID() == id) then return "ContainerFrame5" end
-    if (ContainerFrame6:GetID() == id) then return "ContainerFrame6" end
-    if (ContainerFrame7:GetID() == id) then return "ContainerFrame7" end
-    if (ContainerFrame8:GetID() == id) then return "ContainerFrame8" end
-    if (ContainerFrame9:GetID() == id) then return "ContainerFrame9" end
-    if (ContainerFrame10:GetID() == id) then return "ContainerFrame10" end
-    if (ContainerFrame11:GetID() == id) then return "ContainerFrame11" end
-    if (ContainerFrame12:GetID() == id) then return "ContainerFrame12" end
+---[[ Bag Frame Parser
+local function GetContainerFrameName(id)
+    for i=1, NUM_CONTAINER_FRAMES, 1 do
+        local containerFrame = getglobal("ContainerFrame"..i)
+        if (containerFrame:IsShown() and (containerFrame:GetID() == id)) then
+            return "ContainerFrame"..i
+        end
+    end
     return nil
 end
 --]]
 
----[[ Inventory ID's are different from SlotID's, so we need a translator to properly parse bank
--- slot item tooltips. Otherwise, we can't read the tooltips to find out if it's usable.
+---[[ Bank Frame Parser
 local function GetBankFrameInventorySlot(slot)
-    if (BankFrameItem1:GetID() == slot) then return 40 end
-    if (BankFrameItem2:GetID() == slot) then return 41 end
-    if (BankFrameItem3:GetID() == slot) then return 42 end
-    if (BankFrameItem4:GetID() == slot) then return 43 end
-    if (BankFrameItem5:GetID() == slot) then return 44 end
-    if (BankFrameItem6:GetID() == slot) then return 45 end
-    if (BankFrameItem7:GetID() == slot) then return 46 end
-    if (BankFrameItem8:GetID() == slot) then return 47 end
-    if (BankFrameItem9:GetID() == slot) then return 48 end
-    if (BankFrameItem10:GetID() == slot) then return 49 end
-    if (BankFrameItem11:GetID() == slot) then return 50 end
-    if (BankFrameItem12:GetID() == slot) then return 51 end
-    if (BankFrameItem13:GetID() == slot) then return 52 end
-    if (BankFrameItem14:GetID() == slot) then return 53 end
-    if (BankFrameItem15:GetID() == slot) then return 54 end
-    if (BankFrameItem16:GetID() == slot) then return 55 end
-    if (BankFrameItem17:GetID() == slot) then return 56 end
-    if (BankFrameItem18:GetID() == slot) then return 57 end
-    if (BankFrameItem19:GetID() == slot) then return 58 end
-    if (BankFrameItem20:GetID() == slot) then return 59 end
-    if (BankFrameItem21:GetID() == slot) then return 60 end
-    if (BankFrameItem22:GetID() == slot) then return 61 end
-    if (BankFrameItem23:GetID() == slot) then return 62 end
-    if (BankFrameItem24:GetID() == slot) then return 63 end
+    for i=1, NUM_BANKGENERIC_SLOTS, 1 do
+        local bankSlot = getglobal("BankFrameItem"..i)
+        if (bankSlot:GetID() == slot) then
+            return i + 39
+        end
+    end
     return nil
 end
---]]
 
----[[ Parses Recipe and Trinket tooltips from the players bags or bank slots. This is done
--- automatically without the player having to hover over an item manually.
+---[[ Automatic, Hidden Tool Tip Parser
 local function CheckItemTooltip(bag, slot, itemtype)
     EquipColor_ScanTooltip:ClearLines()
     if (bag == -1) then
@@ -312,6 +297,19 @@ local function CheckItemTooltip(bag, slot, itemtype)
                 return false
             end
         end
+    elseif (itemtype == "Book") then
+        for Book = 2,4 do
+            local EquipColor_Tooltip = getglobal('EquipColor_ScanTooltipTextLeft'..Book):GetText()
+            if EquipColor_Tooltip then
+                --EquipColor_BMsg("CheckItemTooltip: Book_Tooltip ["..EquipColor_Tooltip.."]")
+                local _, _, Class = string.find(EquipColor_Tooltip, "Classes%: (.+)")
+                if (Class == UnitClass("Player")) then
+                    return true
+                else
+                    return false
+                end
+            end
+        end
     elseif (itemtype == "INVTYPE_TRINKET") then
         local EquipColor_Tooltip = getglobal('EquipColor_ScanTooltipTextLeft5'):GetText()
         if EquipColor_Tooltip then
@@ -332,9 +330,8 @@ local function CheckItemTooltip(bag, slot, itemtype)
 end
 --]]
 
----[[ Parses weapons and checks the players skill sheet. Passing a 'skill' is required but passing a
--- 'rank' is optional. Returns skill or skill and rank or false.
-function CheckCharacterSkills(skill, rank)
+---[[ Player Skills Parser
+local function CheckCharacterSkills(skill, rank)
     local retSubclass = skill
     if (retSubclass == "One-Handed Axes") then
         skill = "Axes"
@@ -374,8 +371,8 @@ function CheckCharacterSkills(skill, rank)
 end
 --]]
 
----[[ Checks the players spell box for a spell and returns true or false.
-function CheckCharacterSpells(spell)
+---[[ Spell Book Parser
+local function CheckCharacterSpells(spell)
     local i = 1
     while true do
         local spellName, spellRank = GetSpellName(i, BOOKTYPE_SPELL)
@@ -392,10 +389,14 @@ function CheckCharacterSpells(spell)
 end
 --]]
 
----[[ AddOn compatibility functions. Currently supports Bagnon and OneBag: When ever an Hooked AddOn
--- fucntion is called this is called after it to re-color the slots we want to show up.
+---------------------------------------------------------------------------------------------------
+-- AddOn compatibility functions. Currently supports Bagnon and OneBag. When ever a Hooked AddOn
+-- fucntion is called these are called after it to re-color the slots we want to show up un-usable.
+---------------------------------------------------------------------------------------------------
+
+---[[ Colors items from slotsToColor table
 function EquipColor:AddOnCore_ContainerFrame_Update(object)
-    --EquipColor_BMsg("AddOnCore_ContainerFrame_Update: Fired!")
+    EquipColor_BMsg("AddOnCore_ContainerFrame_Update: Fired!")
     for k,v in pairs(self.slotsToColor) do
         if (self.slotsToColor[k] ~= nil) then
             local _, _, Learned = string.find(self.slotsToColor[k], (".+%d+(Learned)"))
@@ -410,7 +411,7 @@ function EquipColor:AddOnCore_ContainerFrame_Update(object)
 end
 --]]
 
----[[ Certain Hooked Functions will trigger a DB clear to keep the table from getting too big.
+---[[ Removes entries from slotsToColor table when a slot needs updating.
 function EquipColor:AddOnCore_ClearContainerFrameTable(slot)
     for k,v in pairs(EquipColor.slotsToColor) do
         if v == slot then
@@ -420,7 +421,7 @@ function EquipColor:AddOnCore_ClearContainerFrameTable(slot)
 end
 --]]
 
----[[ Core function for AddOn compatibility.
+---[[ Core function.
 function EquipColor:AddOnCore_SetItemColors(object, slot)
     if slot == nil then slot = object end
     EquipColor:AddOnCore_ClearContainerFrameTable(slot:GetName())
@@ -490,6 +491,19 @@ function EquipColor:AddOnCore_SetItemColors(object, slot)
                     table.insert(self.slotsToColor, slot:GetName().."Learned")
                     --EquipColor_BMsg("SetItemColors(Recipes-Learned): Name ["..itemname.."] Player has already learned recipe")
                 end
+                if (itemsubclass == "Book") then
+                    if (CheckItemTooltip(bag:GetID(), slot:GetID(), "Book") == false) then
+                        table.insert(self.slotsToColor, slot:GetName())
+                        --EquipColor_BMsg("SetItemColors(Book-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]")
+                    end
+                end
+            elseif (itemclass == "Miscellaneous") then
+                if (itemsubclass == "Junk") then
+                    if (CheckItemTooltip(bag:GetID(), slot:GetID(), "Book") == false) then
+                        table.insert(self.slotsToColor, slot:GetName())
+                        --EquipColor_BMsg("SetItemColors(Book-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]")
+                    end
+                end
             elseif (itemEquipLoc == "INVTYPE_TRINKET") then
                 if (CheckItemTooltip(bag:GetID(), slot:GetID(), itemEquipLoc) == false) then
                     table.insert(self.slotsToColor, slot:GetName())
@@ -501,7 +515,11 @@ function EquipColor:AddOnCore_SetItemColors(object, slot)
 end
 --]]
 
----[[ Main EquipColor Core Function. This is called by all core functions below it.
+---------------------------------------------------------------------------------------------------
+-- Default WoW Client Functions
+---------------------------------------------------------------------------------------------------
+
+---[[ Core Function. This is called by all core functions below.
 function EquipColor:ColorItems(bag, slot, itemFrame, frame)
     local itemid, name = GetFromLink(GetContainerItemLink(bag, slot))
     if (itemid ~= -1 and name ~= "Unknown") then
@@ -510,42 +528,42 @@ function EquipColor:ColorItems(bag, slot, itemFrame, frame)
             --if frame ~= nil then EquipColor_BMsg("ColorItems(Items): ItemName ["..itemname.."] ItemID ["..itemid.."]") end
             if (itemminlevel > UnitLevel("player")) then
                 SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                if frame ~= nil then EquipColor_BMsg("ColorItems(AllItems-LevelCheck): Name ["..itemname.."] ID ["..itemid.."] SubClass ["..itemsubclass.."]") end
+                if frame ~= nil then EquipColor_BMsg(frame.."(AllItems-LevelCheck): Name ["..itemname.."] ID ["..itemid.."] SubClass ["..itemsubclass.."]") end
             elseif ((itemclass == "Weapon" or itemclass == "Armor") and itemsubclass ~= "Miscellaneous") then
                 if (CheckCharacterSkills(itemsubclass) == false) then
                     SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                    if frame ~= nil then EquipColor_BMsg("ColorItems(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
+                    if frame ~= nil then EquipColor_BMsg(frame.."(Weapons&Armor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                 elseif (itemclass == "Weapon" and itemsubclass == "Fishing Pole") then
                     local skillName, skillRank = CheckCharacterSkills("Fishing", true)
                     local profName, profLevel = CheckItemTooltip(bag, slot, itemsubclass)
                     if (profName == "Fishing" and skillName == "Fishing") then
                         if (tonumber(profLevel) > skillRank) then
                             SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                            if frame ~= nil then EquipColor_BMsg("SetItemColors(Fishing Pole-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]") end
+                            if frame ~= nil then EquipColor_BMsg(frame.."(Fishing Pole-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]") end
                         end
                     end
                 elseif (itemclass == "Armor") then
                     if CheckItemTooltip(bag, slot, "ClassArmor") == false then
                         SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                        if frame ~= nil then EquipColor_BMsg("SetItemColors(ClassArmor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
+                        if frame ~= nil then EquipColor_BMsg(frame.."(ClassArmor): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                     end
                 elseif (CheckCharacterSpells("Dual Wield") == false) then
                     if (CheckItemTooltip(bag, slot, itemclass) == true) then
                         SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                        if frame ~= nil then EquipColor_BMsg("ColorItems(Weapon-Off Hand): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
+                        if frame ~= nil then EquipColor_BMsg(frame.."(Weapon-Off Hand): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                     end
                 end
             elseif (itemclass == "Projectile" or itemclass == "Quiver")then
                 if (CheckCharacterSkills("Bows") == false and CheckCharacterSkills("Crossbows") == false) then
                     if (itemsubclass == "Arrow" or itemsubclass == "Quiver") then
                         SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                        if frame ~= nil then EquipColor_BMsg("ColorItems(Arrows&Quivers): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
+                        if frame ~= nil then EquipColor_BMsg(frame.."(Arrows&Quivers): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                     end
                 end
                 if (CheckCharacterSkills("Guns") == false) then
                     if (itemsubclass == "Bullet" or itemsubclass == "Ammo Pouch") then
                         SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                        if frame ~= nil then EquipColor_BMsg("ColorItems(Bullets&Pouches): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
+                        if frame ~= nil then EquipColor_BMsg(frame.."(Bullets&Pouches): Name ["..itemname.."] ID ["..itemid.."] subclass ["..itemsubclass.."]") end
                     end
                 end
             elseif (itemclass == "Recipe") then
@@ -553,24 +571,37 @@ function EquipColor:ColorItems(bag, slot, itemFrame, frame)
                 if (profName and profLevel) then
                     if (CheckCharacterSkills(profName) == false) then
                         SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                        if frame ~= nil then EquipColor_BMsg("ColorItems(Recipes-ProfCheck):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]") end
+                        if frame ~= nil then EquipColor_BMsg(frame.."(Recipes-ProfCheck):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]") end
                     else
                         local skillName, skillRank = CheckCharacterSkills(profName, true)
                         if (tonumber(profLevel) > skillRank) then
                             SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                            if frame ~= nil then EquipColor_BMsg("ColorItems(Recipes-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]") end
+                            if frame ~= nil then EquipColor_BMsg(frame.."(Recipes-SkillLevel):  Name ["..itemname.."] profName ["..profName.."] profLevel ["..profLevel.."]") end
                         end
                     end
                 end
                 local hasLearned = CheckItemTooltip(bag, slot, "Learned")
                 if (hasLearned) then
                     SetItemButtonTextureVertexColor(itemFrame, 0, 1, 1)
-                    if frame ~= nil then EquipColor_BMsg("ColorItems(Recipes-Learned): Name ["..itemname.."] Player has already learned recipe") end
+                    if frame ~= nil then EquipColor_BMsg(frame.."(Recipes-Learned): Name ["..itemname.."] Player has already learned recipe") end
+                end
+                if (itemsubclass == "Book") then
+                    if (CheckItemTooltip(bag, slot, "Book") == false) then
+                        SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
+                        if frame ~= nil then EquipColor_BMsg(frame.."(Book-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]") end
+                    end
+                end
+            elseif (itemclass == "Miscellaneous") then
+                if (itemsubclass == "Junk") then
+                    if (CheckItemTooltip(bag, slot, "Book") == false) then
+                        SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
+                        if frame ~= nil then EquipColor_BMsg(frame.."(Book-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]") end
+                    end
                 end
             elseif (itemEquipLoc == "INVTYPE_TRINKET") then
                 if (CheckItemTooltip(bag, slot, itemEquipLoc) == false) then
                     SetItemButtonTextureVertexColor(itemFrame, 1, 0, 0)
-                    if frame ~= nil then EquipColor_BMsg("ColorItems(Trinkets-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]") end
+                    if frame ~= nil then EquipColor_BMsg(frame.."(Trinkets-ClassCheck):  Name ["..itemname.."] itemEquipLoc ["..itemEquipLoc.."]") end
                 end
             end
         end
@@ -578,13 +609,12 @@ function EquipColor:ColorItems(bag, slot, itemFrame, frame)
 end
 --]]
 
----[[ Called by the Bag OnEvent handler to update all bags and slots.
+---[[ Called by BagFrame OnEvent handler to update all bags and slots.
 function EquipColor:ColorUnusableItems()
-    if EquipColor.BagFrames[1].bagsShown > 1 then
-        for bag = 0, 12 do
-            for slot = 1, GetContainerNumSlots(bag) do
-                local bagName = GetContainerFrameName(bag)
-                if bagName == nil then return end
+    for bag=0, 11, 1 do
+        for slot = 1, GetContainerNumSlots(bag) do
+            local bagName = GetContainerFrameName(bag)
+            if bagName then
                 local itemFrame = getglobal(bagName.."Item"..(GetContainerNumSlots(bag)-(slot-1)))
                 EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableItems")
             end
@@ -593,12 +623,11 @@ function EquipColor:ColorUnusableItems()
 end
 --]]
 
----[[ Called by the Bag OnShow hooks handler. Updates the toggled bag.
+---[[ Called by BagFrame OnShow hooks handler. Updates the toggled bag.
 function EquipColor:ColorUnusableItemsInBag(bag)
-    if EquipColor.BagFrames[1].bagsShown > 1 then
-        for slot = 1, GetContainerNumSlots(bag) do
-            local bagName = GetContainerFrameName(bag)
-            if bagName == nil then return end
+    for slot = 1, GetContainerNumSlots(bag) do
+        local bagName = GetContainerFrameName(bag)
+        if bagName then
             local itemFrame = getglobal(bagName.."Item"..(GetContainerNumSlots(bag)-(slot-1)))
             EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableItemsInBag")
         end
@@ -606,29 +635,25 @@ function EquipColor:ColorUnusableItemsInBag(bag)
 end
 --]]
 
----[[ Called by the Bank OnEvent handler to update all visible Bank bags and slots.
+---[[ Called by BankFrame OnEvent handler to update all visible Bank bags and slots.
 function EquipColor:ColorUnusableBankItems()
-    if BankFrame:IsVisible() then
-        local bag = BANK_CONTAINER
-        for slot = 1, GetContainerNumSlots(bag) do
-            local itemFrame = getglobal("BankFrameItem"..slot)
-            EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItems")
-        end
-    end
-end
---]]
-
----[[ Called by the Bank OnShow handler. Updates the main bank frame and each toggled bag.
-function EquipColor:ColorUnusableBankItemsInSlot(slot)
-    if BankFrame:IsVisible() then
-        local bag = BANK_CONTAINER
+    local bag = BANK_CONTAINER
+    for slot = 1, GetContainerNumSlots(bag) do
         local itemFrame = getglobal("BankFrameItem"..slot)
-        EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItemsInSlot")
+        EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItems")
     end
 end
 --]]
 
----[[ Called by the Mail OnShow handler.
+---[[ Called by BankFrame OnShow handler. Updates the main bank frame and each toggled bag.
+function EquipColor:ColorUnusableBankItemsInSlot(slot)
+    local bag = BANK_CONTAINER
+    local itemFrame = getglobal("BankFrameItem"..slot)
+    EquipColor:ColorItems(bag, slot, itemFrame, nil) --"ColorUnusableBankItemsInSlot")
+end
+--]]
+
+---[[ Called by MailFrame OnShow handler.
 function EquipColor:ColorUnusableMailItemsInSlot()
     if MailFrame:IsVisible() then
         local numItems = GetInboxNumItems()
@@ -656,7 +681,7 @@ function EquipColor:ColorUnusableMailItemsInSlot()
 end
 --]]
 
----[[ Called by the Default WoW Client Event handler.
+---[[ Called by Default WoW Client Event handler. All Merchant/Vendors should trigger this.
 function EquipColor:ColorUnusableMerchantItems()
     if MerchantFrame:IsVisible() then
         local numMerchantItems = GetMerchantNumItems()
