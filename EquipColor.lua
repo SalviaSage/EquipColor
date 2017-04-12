@@ -95,16 +95,16 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         EquipColor:SecureHook("MerchantFrame_Update", "ColorUnusableMerchantItems")
     end
 
-    -- OneBag: Standard Events
-    if (OneCore ~= nil) then
+    -- AllInOneInventory : Standard Events
+    if (IsAddOnLoaded("AllInOneInventory")) then
         if (arg1 == "LeftButton") or (arg1 == "RightButton") then
             EquipColor_changedFrames = EquipColor_changedFrames + 1
         end
-        if (not EquipColor:IsHooked(OneCore.modulePrototype, "SetBorderColor")) then
-            EquipColor:SecureHook(OneCore.modulePrototype, "SetBorderColor", "AddOnCore_SetItemColors")
+        if (not EquipColor:IsHooked("AllInOneInventoryFrame_UpdateButton")) then
+            EquipColor:SecureHook("AllInOneInventoryFrame_UpdateButton", "AddOnCore_SetItemColors")
         end
-        if (not EquipColor:IsHooked(OneCore.modulePrototype, "UpdateBag")) then
-            EquipColor:SecureHook(OneCore.modulePrototype, "UpdateBag", "AddOnCore_ContainerFrame_Update")
+        if (not EquipColor:IsHooked("AIOBFrame_UpdateCooldown")) then
+            EquipColor:SecureHook("AIOBFrame_UpdateCooldown", "AddOnCore_SetItemColors")
         end
     end
 
@@ -126,14 +126,27 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         if (arg1 == "LeftButton") or (arg1 == "RightButton") then
             EquipColor_changedFrames = EquipColor_changedFrames + 1
         end
-        if (not EquipColor:IsHooked("EngBank_UpdateButton")) then
-            EquipColor:SecureHook("EngBank_UpdateButton", "AddOnCore_SetItemColors")
-        end
         if (not EquipColor:IsHooked("EngInventory_UpdateButton")) then
             EquipColor:SecureHook("EngInventory_UpdateButton", "AddOnCore_SetItemColors")
         end
+        if (not EquipColor:IsHooked("EngBank_UpdateButton")) then
+            EquipColor:SecureHook("EngBank_UpdateButton", "AddOnCore_SetItemColors")
+        end
         if ( event == "ITEM_LOCK_CHANGED" ) then
             EngInventory_UpdateWindow()
+        end
+    end
+
+    -- OneBag: Standard Events
+    if (OneCore ~= nil) then
+        if (arg1 == "LeftButton") or (arg1 == "RightButton") then
+            EquipColor_changedFrames = EquipColor_changedFrames + 1
+        end
+        if (not EquipColor:IsHooked(OneCore.modulePrototype, "SetBorderColor")) then
+            EquipColor:SecureHook(OneCore.modulePrototype, "SetBorderColor", "AddOnCore_SetItemColors")
+        end
+        if (not EquipColor:IsHooked(OneCore.modulePrototype, "UpdateBag")) then
+            EquipColor:SecureHook(OneCore.modulePrototype, "UpdateBag", "AddOnCore_ContainerFrame_Update")
         end
     end
 
@@ -439,6 +452,8 @@ end
 
 ---[[ Core function.
 function EquipColor:AddOnCore_SetItemColors(slot, object)
+    --if slot then EquipColor_BMsg("SetItemColors: slot ["..slot:GetName().."]") end
+    --if object then EquipColor_BMsg("SetItemColors: object ["..object.."]") end
     if (OneCore ~= nil) then
         slot = object
         object = slot
@@ -455,9 +470,23 @@ function EquipColor:AddOnCore_SetItemColors(slot, object)
         slotn = object["slotnum"]
         item = slot:GetName()
     end
+    if (IsAddOnLoaded("AllInOneInventory")) then
+        local name = slot:GetName()
+        if (name == "AllInOneInventoryFrame") then
+            item = getglobal(name.."Item"..object)
+            if (not item) or (not item:IsVisible()) then return; end
+            bagn, slotn = AllInOneInventory_GetIdAsBagSlot(item:GetID());
+            if (bag == -1) and (slot == -1) then return; end
+            item = item:GetName()
+        else
+            bagn = slot.bagIndex
+            slotn = slot.itemIndex
+            item = slot:GetName()
+        end
+    end
+    --EquipColor_BMsg("SetItemColors: bag ["..bagn.."] slot ["..slotn.."]")
     EquipColor:AddOnCore_ClearContainerFrameTable(item)
     local itemid, name = GetFromLink(GetContainerItemLink(bagn, slotn))
-    --EquipColor_BMsg("SetItemColors: bag ["..bagn.."] slot ["..slotn.."]")
     if (itemid ~= -1 and name ~= "Unknown") then
         local itemname, _, _, itemminlevel, itemclass, itemsubclass, _, itemEquipLoc = GetItemInfo(itemid)
         if (itemclass ~= nil and itemsubclass ~= nil) then
