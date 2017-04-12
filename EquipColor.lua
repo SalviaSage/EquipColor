@@ -132,6 +132,9 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
         if (not EquipColor:IsHooked("EngInventory_UpdateButton")) then
             EquipColor:SecureHook("EngInventory_UpdateButton", "AddOnCore_SetItemColors")
         end
+        if ( event == "ITEM_LOCK_CHANGED" ) then
+            EngInventory_UpdateWindow()
+        end
     end
 
     -- Default WoW Client: Standard Events
