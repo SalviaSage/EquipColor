@@ -101,10 +101,10 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
             EquipColor_changedFrames = EquipColor_changedFrames + 1
         end
         if (not EquipColor:IsHooked("AllInOneInventoryFrame_UpdateButton")) then
-            EquipColor:SecureHook("AllInOneInventoryFrame_UpdateButton", "AddOnCore_SetItemColors")
+            EquipColor:SecureHook("AllInOneInventoryFrame_UpdateButton", "AddOnCore_SetAddon")
         end
         if (not EquipColor:IsHooked("AIOBFrame_UpdateCooldown")) then
-            EquipColor:SecureHook("AIOBFrame_UpdateCooldown", "AddOnCore_SetItemColors")
+            EquipColor:SecureHook("AIOBFrame_UpdateCooldown", "AddOnCore_SetAddon")
         end
     end
 
@@ -114,7 +114,7 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
             EquipColor_changedFrames = EquipColor_changedFrames + 1
         end
         if (not EquipColor:IsHooked("BagnonItem_UpdateBorder")) then
-            EquipColor:SecureHook("BagnonItem_UpdateBorder", "AddOnCore_SetItemColors")
+            EquipColor:SecureHook("BagnonItem_UpdateBorder", "AddOnCore_SetAddon")
         end
         if (not EquipColor:IsHooked("BagnonFrame_Update")) then
             EquipColor:SecureHook("BagnonFrame_Update", "AddOnCore_ContainerFrame_Update")
@@ -127,10 +127,10 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
             EquipColor_changedFrames = EquipColor_changedFrames + 1
         end
         if (not EquipColor:IsHooked("EngInventory_UpdateButton")) then
-            EquipColor:SecureHook("EngInventory_UpdateButton", "AddOnCore_SetItemColors")
+            EquipColor:SecureHook("EngInventory_UpdateButton", "AddOnCore_SetAddon")
         end
         if (not EquipColor:IsHooked("EngBank_UpdateButton")) then
-            EquipColor:SecureHook("EngBank_UpdateButton", "AddOnCore_SetItemColors")
+            EquipColor:SecureHook("EngBank_UpdateButton", "AddOnCore_SetAddon")
         end
         if ( event == "ITEM_LOCK_CHANGED" ) then
             EngInventory_UpdateWindow()
@@ -143,10 +143,23 @@ function EquipColor_OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg
             EquipColor_changedFrames = EquipColor_changedFrames + 1
         end
         if (not EquipColor:IsHooked(OneCore.modulePrototype, "SetBorderColor")) then
-            EquipColor:SecureHook(OneCore.modulePrototype, "SetBorderColor", "AddOnCore_SetItemColors")
+            EquipColor:SecureHook(OneCore.modulePrototype, "SetBorderColor", "AddOnCore_SetAddon")
         end
         if (not EquipColor:IsHooked(OneCore.modulePrototype, "UpdateBag")) then
             EquipColor:SecureHook(OneCore.modulePrototype, "UpdateBag", "AddOnCore_ContainerFrame_Update")
+        end
+    end
+
+    -- SUCC-bag: Standard Events
+    if (IsAddOnLoaded("SUCC-bag")) then
+        if (arg1 == "LeftButton") or (arg1 == "RightButton") then
+            EquipColor_changedFrames = EquipColor_changedFrames + 1
+        end
+        if (not EquipColor:IsHooked("FrameUpdate")) then
+            EquipColor:SecureHook("FrameUpdate", "AddOnCore_SetAddon")
+        end
+        if (not EquipColor:IsHooked("SBFrameOpen")) then
+            EquipColor:SecureHook("SBFrameOpen", "AddOnCore_SetAddon")
         end
     end
 
@@ -450,8 +463,8 @@ function EquipColor:AddOnCore_ClearContainerFrameTable(slot)
 end
 --]]
 
----[[ Core function.
-function EquipColor:AddOnCore_SetItemColors(slot, object)
+---[[ Determine addon.
+function EquipColor:AddOnCore_SetAddon(slot, object)
     --if slot then EquipColor_BMsg("SetItemColors: slot ["..slot:GetName().."]") end
     --if object then EquipColor_BMsg("SetItemColors: object ["..object.."]") end
     if (OneCore ~= nil) then
@@ -464,11 +477,13 @@ function EquipColor:AddOnCore_SetItemColors(slot, object)
         bagn = bag:GetID()
         slotn = slot:GetID()
         item = slot:GetName()
+        EquipColor:AddOnCore_SetItemColors(bagn, slotn, item)
     end
     if (IsAddOnLoaded("EngBags")) then
         bagn = object["bagnum"]
         slotn = object["slotnum"]
         item = slot:GetName()
+        EquipColor:AddOnCore_SetItemColors(bagn, slotn, item)
     end
     if (IsAddOnLoaded("AllInOneInventory")) then
         local name = slot:GetName()
@@ -483,8 +498,48 @@ function EquipColor:AddOnCore_SetItemColors(slot, object)
             slotn = slot.itemIndex
             item = slot:GetName()
         end
+        EquipColor:AddOnCore_SetItemColors(bagn, slotn, item)
     end
-    --EquipColor_BMsg("SetItemColors: bag ["..bagn.."] slot ["..slotn.."]")
+    if (IsAddOnLoaded("SUCC-bag")) then
+        local slot = slot:GetName()
+        if (slot == "SUCC_bag") then
+            local totalSlots = 0
+            for bag = 0, 4 do
+                local size = GetContainerNumSlots(bag)
+                if (size and size > 0) then
+                    totalSlots = totalSlots + size
+                end
+            end
+            for slot1 = 1, totalSlots do
+                slotn = getglobal(slot.."Item"..slot1)
+                bagn = slotn:GetParent():GetID()
+                item = slotn:GetName()
+                slotn = slotn:GetID()
+                EquipColor:AddOnCore_SetItemColors(bagn, slotn, item)
+            end
+        end
+        if (slot == "SUCC_bagBank") then
+            local totalSlots = 0
+            for bag = 5, 10 do
+                local size = GetContainerNumSlots(bag)
+                if (size and size > 0) then
+                    totalSlots = totalSlots + size
+                end
+            end
+            for slot2=1, totalSlots + 24 do
+                slotn = getglobal(slot.."Item"..slot2)
+                bagn = slotn:GetParent():GetID()
+                item = slotn:GetName()
+                slotn = slotn:GetID()
+                EquipColor:AddOnCore_SetItemColors(bagn, slotn, item)
+            end
+        end
+    end
+end
+
+---[[ Core function.
+function EquipColor:AddOnCore_SetItemColors(bagn, slotn, item)
+    --EquipColor_BMsg("SetItemColors: bag ["..bagn.."] slot ["..slotn.."] item ["..item.."]")
     EquipColor:AddOnCore_ClearContainerFrameTable(item)
     local itemid, name = GetFromLink(GetContainerItemLink(bagn, slotn))
     if (itemid ~= -1 and name ~= "Unknown") then
